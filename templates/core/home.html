@@ -1,0 +1,151 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh;">
+    <div class="card shadow-lg p-3" style="width:100%; max-width: 700px;">
+        <div class="card-body">
+
+            <h3 class="text-center mb-4 text-light">To-Do List</h3>
+
+            <!-- Divider -->
+            <hr class="my-4 border-light">
+
+            <!-- Progress Section -->
+            <div class="progress-box mb-4">
+                <h6 class="text-center mb-4 text-light">Keep it up!</h6>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {% widthratio task_done.count tasks.count 100 %}%;"></div>
+                </div>
+            </div>
+
+            <!-- Add Task Input -->
+            <form method="POST" action="{% url 'add_task' %}" class="input-group mb-3 d-flex justify-content-between">
+                {% csrf_token %}
+                <input type="text" name="add-task" class="form-control rounded" placeholder="Add a new task...">
+
+                <div class="dropdown">
+                    <!-- Main dropdown trigger -->
+                    <button class="btn btn-secondary dropdown-toggle me-1 ms-1" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                    <!-- Dropdown content -->
+                    <div class="dropdown-menu p-3 bg-dark text-light" aria-labelledby="dropdownMenuButton" style="min-width: 250px;">
+                        
+                        <!-- Category select -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="category" class="form-label">Category</label>
+                                <button type="button" class="btn btn-primary ms-2 mt-4" data-bs-target="#addCategoryModal" data-bs-toggle="modal">
+                                    + Add Category
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <select name="category" id="category" class="form-select">
+                                    <option value="">-- No Category --</option>
+                                    {% for category in categories %}
+                                        <option value="{{category.id}}">{{category.title}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="border-light">
+
+                        <!-- Priority select -->
+                        <div>
+                            <label for="priority" class="form-label">Priority</label>
+                            <select name="priority" id="" class="form-select">
+                                {% for priority, label in priorities %}
+                                    <option value="{{ priority }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary rounded" type="submit" id="add-task-btn">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </form>
+
+            <div class="mt-3" id="filterCategoryWrapper">
+                    
+                    <!-- Search Panel -->
+                    <form method="GET" action="{% url 'search_task' %}">
+                        <div class="input-group">
+                            <input type="text" name="query" class="form-control bg-dark text-light border-light" placeholder="Search tasks..." value="{{ request.GET.query }}">
+                            <button type="submit" class="btn btn-outline-light bg-dark">
+                                <i class="bi bi-search text-white"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+
+            <div class="table-responsive mt-2" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Status</th><th>Title</th><th>Priority</th><th>Category</th><th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for task in tasks %}
+                        <tr>
+                            <td>
+                                <!-- Done/Undone -->
+                                <form action="{% url 'done_task' task.id %}" method="POST" class="">
+                                    {% csrf_token %}
+                                    <button type="submit" name="check" value="{{ task.id }}" class="btn bg-transparent rounded-circle">
+                                        {% if task.is_done %}
+                                        <i class="bi bi-check-circle text-success"></i>
+                                        {% else %}
+                                        <i class="bi bi-x-circle text-danger"></i>
+                                        {% endif %}
+                                    </button>
+                                </form>
+                            </td>
+
+                            <td>{{ task.title|truncatechars:20 }}</td>
+
+                            <td>
+                                {% if task.priority == "3" %}
+                                <span class="badge bg-danger text-dark me-2 px-0" style="width: 70px;">High</span>
+                                {% elif task.priority == "2" %}
+                                    <span class="badge bg-warning text-dark me-2 px-0" style="width: 70px;">Medium</span>
+                                {% elif task.priority == "1" %}
+                                    <span class="badge bg-info text-dark me-2 px-0" style="width: 70px;">Low</span>
+                                {% else %}
+                                    <span class="me-2" style="width: 70px;"></span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if task.category %}
+                                <span class="rounded border border-white text-white text-center px-2 py-1" style="">
+                                    {{ task.category.title|truncatechars:10 }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">No Category</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <form method="POST" action="{% url 'task_detail' task.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn bg-transparent">
+                                    <i class="bi bi-eye text-light"></i>
+                                </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
